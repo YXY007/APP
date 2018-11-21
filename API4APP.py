@@ -282,7 +282,12 @@ def logon():
     db = connectdb()
     ret = newUser(db, username, password)
     closedb(db)
-    return ret
+    result = {}
+    if ret == "False":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+    return json.dumps(result)
 
 
 # No such userName: False
