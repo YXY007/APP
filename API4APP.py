@@ -191,7 +191,8 @@ def checkSubscription(db, userID):
             publisherName.append(publisher[0][0])
         list_publisher = {}
         list_publisher["publisher"] = publisherName
-        return json.dumps(list_publisher)
+        # return json.dumps(list_publisher)
+        return list_publisher
     except Exception, Argument:
         print Argument
     return "False"
@@ -318,16 +319,23 @@ def subscribe():
     postType = request.form.get('posttype')
     userID = request.form.get('userid')
     db = connectdb()
-    ret = "False"
+    ret = {}
     if postType == "0":
-        ret = checkSubscription(db, userID)
+        ret["returnCode"] = 1
+        ret["result"] = checkSubscription(db, userID)
     if postType == "1":
         publisherID = request.form.get('publisherid')
-        ret = subscribePblisher(db, userID, publisherID)
+        if subscribePblisher(db, userID, publisherID) == "True":
+            ret["returnCode"] = 1
+        else:
+            ret["returnCode"] = 0
     if postType == "2":
         publisherID = request.form.get('publisherid')
-        ret = unsubscribe(db, userID, publisherID)
-    return ret
+        if unsubscribe(db, userID, publisherID) == "True":
+            ret["returnCode"] = 1
+        else:
+            ret["returnCode"] = 0
+    return json.dumps(ret)
 
 
 
