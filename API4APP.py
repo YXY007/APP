@@ -295,7 +295,13 @@ def login():
     db = connectdb()
     ret = checkPassword(db, userName, password)
     closedb(db)
-    return ret
+    result = {}
+    if ret == "False":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+        result["userID"] = ret    
+    return json.dumps(result)
 
 
 # postType: 0-check 1-subscribe 2-unsubscribe
