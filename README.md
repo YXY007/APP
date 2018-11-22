@@ -118,3 +118,16 @@
 	<p>Save the news.</p>
 	<p>**posttype**, **userid** and **newsid** are needed. comment is not necessary.</p>
 	<p>Return: **True** if succeed. **False** if fail.</p>
+
+<h3>Add Evaluation</h3>
+<p>Address: http://127.0.0.1:5000/evaluate</p>
+<p>Post: newsid, like_or_dislike, operation</p>
+
+* like\_or\_dislike
+	<p>"like" for like, "dislike" for dislike
+
+* operation
+	<p>"1" for add, "-1" for subtract</p>
+
+* returnCode
+	<p>0 for success, 1 for fail</p>

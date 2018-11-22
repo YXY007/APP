@@ -264,6 +264,22 @@ def deleteSave(db, userID, newsID):
         db.rollback()
     return "False"
 
+# update
+def updateNewsLikeNum(db, newsID, like_or_dislike, operation):
+    cursor = db.cursor()
+    if like_or_dislike == "like":
+        sql = "UPDATE APP.news SET like_num = like_num + %s WHERE newsID = %s;"
+    else :
+        sql = "UPDATE news SET dislike_num = dislike_num + %s WHERE newsID = %s;"        
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql % (operation, newsID))
+        db.commit()
+        return "True"
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return "False"
 
 # close
 def closedb(db):
@@ -382,6 +398,24 @@ def makeComment():
         ret = saveNews(db, userID, newsID)
     closedb(db)
     return ret
+
+# like_or_dislike: "like" for like, "dislike" for dislike
+# operation: "1" for add, "-1" for subtract
+# returnCode: 0 for success, 1 for fail
+@app.route('/evaluate', methods=['POST'])
+def makeEvaluation():
+    newsID = request.form.get('newsid')
+    like_or_dislike = request.form.get('like_or_dislike')
+    operation = request.form.get('operation')
+    db = connectdb()
+    ret = updateNewsLikeNum(db, newsID, like_or_dislike, operation)
+    closedb(db)
+    result = {}
+    if ret == "True":
+        result["returnCode"] = 0
+    else :
+        result["returnCode"] = 1
+    return json.dumps(result)
 
 
 # postType: 0-comment 1-like 2-dislike 3-save
