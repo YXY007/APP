@@ -147,7 +147,7 @@ def allNews(db):
             tmp["title"] = row[2]
             tmp["author"] = row[3]
             tmp["time"] = row[4]
-            tmp["content"] = row[5]
+            tmp["content"] = json.loads(row[5])
             tmp["like_num"] = row[6]
             tmp["dislike_num"] = row[7]
             news_list[str(newsID)] = tmp
