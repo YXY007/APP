@@ -387,6 +387,7 @@ def makeComment():
     newsID = request.form.get('newsid')
     db = connectdb()
     ret = "False"
+    result = {}
     if type == "0":
         comment = request.form.get('comment')
         ret = userComment(db, userID, newsID, comment)
@@ -397,7 +398,11 @@ def makeComment():
     if type == "3":
         ret = saveNews(db, userID, newsID)
     closedb(db)
-    return ret
+    if ret == "True":
+        result["returnCode"] = 0
+    else :
+        result["returnCode"] = 1
+    return json.dumps(result)
 
 # like_or_dislike: "like" for like, "dislike" for dislike
 # operation: "1" for add, "-1" for subtract
