@@ -434,6 +434,7 @@ def deleteComment():
     newsID = request.form.get('newsid')
     db = connectdb()
     ret = 0
+    result = {}
     if type == "0":
         comment = request.form.get('comment')
         ret = delete_comment(db, userID, newsID, comment)
@@ -444,7 +445,11 @@ def deleteComment():
     if type == "3":
         ret = deleteSave(db, userID, newsID)
     closedb(db)
-    return ret
+    if ret == "True":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+    return json.dumps(result)
 ############################################################################
 
 
