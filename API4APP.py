@@ -242,7 +242,7 @@ def search_by_keys(db, keyword):
             tmp["time"] = row[4]
             tmp["content"] = row[5]
             tmp["like_num"] = row[6]
-            tmp["dislike_num"] = row[6]
+            tmp["dislike_num"] = row[7]
             news_list[str(newsID)] = tmp
     except Exception, Argument:
         print Argument
