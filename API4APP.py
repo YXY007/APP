@@ -290,8 +290,8 @@ def closedb(db):
 app = Flask(__name__)
 
 
-# Success: return True
-# the userName already exist: return False
+# Success: returnCode = 1
+# the userName already exist: returnCode = 0
 @app.route('/logon', methods=['GET', 'POST'])
 def logon():
     username = request.form.get('username')
@@ -307,9 +307,9 @@ def logon():
     return json.dumps(result)
 
 
-# No such userName: False
-# Password not correct: False
-# Success: UserID
+# No such userName: returnCode = 0
+# Password not correct: returnCode = 0
+# Success: UserID, returnCode = 1
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     userName = request.form.get('username')
@@ -327,9 +327,9 @@ def login():
 
 
 # postType: 0-check 1-subscribe 2-unsubscribe
-# 0: return subscribe list
-# 1: return True or False
-# 2: return True or False
+# 0: return subscribe list, returnCode = 1
+# 1: returnCode=1 for success, returnCode=0 for fail
+# 2: returnCode=1 for success, returnCode=0 for fail
 @app.route('/subscribe', methods=['POST', 'GET'])
 def subscribe():
     postType = request.form.get('posttype')
@@ -377,7 +377,7 @@ def getAllNews():
 
 
 # postType: 0-comment 1-like 2-dislike 3-save
-# return True if success
+# returnCode = 1 if success
 # else return False
 # if like or dislike already exist, return False
 @app.route('/comment', methods=['POST','GET'])
@@ -424,7 +424,7 @@ def makeEvaluation():
 
 
 # postType: 0-comment 1-like 2-dislike 3-save
-# return True if success
+# returnCode = 1 if success
 # else return False
 # if like or dislike already exist, return False
 @app.route('/deleteComment', methods=['GET', 'POST'])
