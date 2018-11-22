@@ -399,9 +399,9 @@ def makeComment():
         ret = saveNews(db, userID, newsID)
     closedb(db)
     if ret == "True":
-        result["returnCode"] = 0
-    else :
         result["returnCode"] = 1
+    else :
+        result["returnCode"] = 0
     return json.dumps(result)
 
 # like_or_dislike: "like" for like, "dislike" for dislike
@@ -417,9 +417,9 @@ def makeEvaluation():
     closedb(db)
     result = {}
     if ret == "True":
-        result["returnCode"] = 0
-    else :
         result["returnCode"] = 1
+    else :
+        result["returnCode"] = 0
     return json.dumps(result)
 
 
@@ -446,9 +446,9 @@ def deleteComment():
         ret = deleteSave(db, userID, newsID)
     closedb(db)
     if ret == "True":
-        result["returnCode"] = 0
-    else:
         result["returnCode"] = 1
+    else:
+        result["returnCode"] = 0
     return json.dumps(result)
 ############################################################################
 
