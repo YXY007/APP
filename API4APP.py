@@ -133,12 +133,12 @@ def saveNews(db, userID, newsID):
 
 
 # query
-def queryNews(db, publisher):
+def allNews(db):
     cursor = db.cursor()
-    sql = "SELECT * FROM news WHERE publisher = %s ORDER BY newsID DESC"
+    sql = "SELECT * FROM news;"
     news_list = {}
     try:
-        cursor.execute(sql, publisher)
+        cursor.execute(sql)
         results = cursor.fetchall()
         for row in results:
             tmp = {}
@@ -146,13 +146,42 @@ def queryNews(db, publisher):
             tmp["publisher"] = row[1]
             tmp["title"] = row[2]
             tmp["author"] = row[3]
-            tmp["content"] = row[4]
-            tmp["like_num"] = row[5]
-            tmp["dislike_num"] = row[6]
+            tmp["time"] = row[4]
+            tmp["content"] = row[5]
+            tmp["like_num"] = row[6]
+            tmp["dislike_num"] = row[7]
             news_list[str(newsID)] = tmp
     except Exception, Argument:
         print Argument
-    return json.dumps(news_list)
+    return news_list
+
+
+def queryNews(db, publisher):
+    cursor = db.cursor()
+    sql = "SELECT * FROM news WHERE "
+    for index, name in enumerate(publisher):
+        if index != 0:
+            sql = sql + " OR "
+        sql = sql + "publisher = '" + str(name) + "'"
+    sql = sql + " ORDER BY newsID DESC;"
+    news_list = {}
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for row in results:
+            tmp = {}
+            newsID = row[0]
+            tmp["publisher"] = row[1]
+            tmp["title"] = row[2]
+            tmp["author"] = row[3]
+            tmp["time"] = row[4]
+            tmp["content"] = row[5]
+            tmp["like_num"] = row[6]
+            tmp["dislike_num"] = row[7]
+            news_list[str(newsID)] = tmp
+    except Exception, Argument:
+        print Argument
+    return news_list
 
 
 def checkPassword(db, userName, password):
@@ -191,8 +220,7 @@ def checkSubscription(db, userID):
             publisherName.append(publisher[0][0])
         list_publisher = {}
         list_publisher["publisher"] = publisherName
-        # return json.dumps(list_publisher)
-        return list_publisher
+        return json.dumps(list_publisher)
     except Exception, Argument:
         print Argument
     return "False"
@@ -211,13 +239,14 @@ def search_by_keys(db, keyword):
             tmp["publisher"] = row[1]
             tmp["title"] = row[2]
             tmp["author"] = row[3]
-            tmp["content"] = row[4]
-            tmp["like_num"] = row[5]
+            tmp["time"] = row[4]
+            tmp["content"] = row[5]
+            tmp["like_num"] = row[6]
             tmp["dislike_num"] = row[6]
             news_list[str(newsID)] = tmp
     except Exception, Argument:
         print Argument
-    return json.dumps(news_list)
+    return news_list
 
 
 #delete
@@ -264,19 +293,37 @@ def deleteSave(db, userID, newsID):
         db.rollback()
     return "False"
 
+
 # update
-def updateNewsLikeNum(db, newsID, like_or_dislike, operation):
+# likeFlag = 1 for like, 0 for dislike
+# exeCode = 1 for add, 0 for minus
+def updateLike(db, userID, newsID, likeFlag, exeCode):
     cursor = db.cursor()
-    if like_or_dislike == "like":
-        sql = "UPDATE APP.news SET like_num = like_num + %s WHERE newsID = %s;"
-    else :
-        sql = "UPDATE news SET dislike_num = dislike_num + %s WHERE newsID = %s;"        
+    if exeCode == 0:
+        num = ["dislike_num", "like_num"]
+        sql1 = "SELECT % FROM news where userID = %s and newsID = %s;"
+        try:
+            cursor.execute("USE APP;")
+            cursor.execute(sql1 % (num[likeFlag], userID, newsID))
+            db.commit()
+            results = cursor.fetchall()
+            if results[0][0] == "0":
+                return "False"
+        except Exception, Argument:
+            # Rollback in case there is any error
+            print Argument
+            db.rollback()
+
+    like = ["dislike_num", "like_num"]
+    exe  = ["-", "+"]
+    sql = "UPDATE news SET %s = %s %s 1 WHERE newsID = %s;"
     try:
         cursor.execute("USE APP;")
-        cursor.execute(sql % (operation, newsID))
+        cursor.execute(sql % (like[likeFlag], like[likeFlag], exe[exeCode], newsID))
         db.commit()
         return "True"
     except Exception, Argument:
+        # Rollback in case there is any error
         print Argument
         db.rollback()
     return "False"
@@ -290,8 +337,8 @@ def closedb(db):
 app = Flask(__name__)
 
 
-# Success: returnCode = 1
-# the userName already exist: returnCode = 0
+# Success: return True
+# the userName already exist: return False
 @app.route('/logon', methods=['GET', 'POST'])
 def logon():
     username = request.form.get('username')
@@ -307,9 +354,9 @@ def logon():
     return json.dumps(result)
 
 
-# No such userName: returnCode = 0
+# No such userName： returnCode = 0
 # Password not correct: returnCode = 0
-# Success: UserID, returnCode = 1
+# Success: returnCode = 1, UserID
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     userName = request.form.get('username')
@@ -322,36 +369,36 @@ def login():
         result["returnCode"] = 0
     else:
         result["returnCode"] = 1
-        result["userID"] = ret    
+        result["userID"] = ret
     return json.dumps(result)
 
 
 # postType: 0-check 1-subscribe 2-unsubscribe
-# 0: return subscribe list, returnCode = 1
-# 1: returnCode=1 for success, returnCode=0 for fail
-# 2: returnCode=1 for success, returnCode=0 for fail
+# 0: return subscribe list
+# 1: return True or False
+# 2: return True or False
 @app.route('/subscribe', methods=['POST', 'GET'])
 def subscribe():
     postType = request.form.get('posttype')
     userID = request.form.get('userid')
     db = connectdb()
-    ret = {}
+    ret = "False"
     if postType == "0":
-        ret["returnCode"] = 1
-        ret["result"] = checkSubscription(db, userID)
+        ret = checkSubscription(db, userID)
     if postType == "1":
         publisherID = request.form.get('publisherid')
-        if subscribePblisher(db, userID, publisherID) == "True":
-            ret["returnCode"] = 1
-        else:
-            ret["returnCode"] = 0
+        ret = subscribePblisher(db, userID, publisherID)
     if postType == "2":
         publisherID = request.form.get('publisherid')
-        if unsubscribe(db, userID, publisherID) == "True":
-            ret["returnCode"] = 1
-        else:
-            ret["returnCode"] = 0
-    return json.dumps(ret)
+        ret = unsubscribe(db, userID, publisherID)
+    result = {}
+    if ret == "False":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+        if ret != "True":
+            result["returnContent"] = ret
+    return json.dumps(result)
 
 
 
@@ -359,27 +406,35 @@ def subscribe():
 # postType: 0-get news 1-search news
 # 0: return news json by users' subscription
 # 1: return news json by keywords
+# 2: return all the news
 @app.route('/news', methods=['POST', 'GET'])
 def getAllNews():
     type = request.form.get('posttype')
     db = connectdb()
     news = "False"
-    print type
     if type == "0":
         publisher = request.form.get('publisher')
-        print publisher
-        news = queryNews(db, publisher)
+        publishers = publisher.split(" ")
+        news = queryNews(db, publishers)
     if type == "1":
         keyword = request.form.get('keyword')
         news = search_by_keys(db, keyword)
+    if type == "2":
+        news = allNews(db)
     closedb(db)
-    return news
+    result = {}
+    if news == "False":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+        result["returnContent"] = news
+    return json.dumps(result)
 
 
 # postType: 0-comment 1-like 2-dislike 3-save
 # returnCode = 1 if success
-# else return False
-# if like or dislike already exist, return False
+# else returnCode = 0
+# if like or dislike already exist, returnCode = 0
 @app.route('/comment', methods=['POST','GET'])
 def makeComment():
     type = request.form.get('posttype')
@@ -387,68 +442,62 @@ def makeComment():
     newsID = request.form.get('newsid')
     db = connectdb()
     ret = "False"
-    result = {}
+    ret2 = "False"
     if type == "0":
         comment = request.form.get('comment')
         ret = userComment(db, userID, newsID, comment)
+        ret2 = "True"
     if type == "1":
         ret = userComment(db, userID, newsID, "like")
+        ret2 = updateLike(db, userID, newsID, 1, 1)
     if type == "2":
         ret = userComment(db, userID, newsID, "dislike")
+        ret2 = updateLike(db, userID, newsID, 0,1)
     if type == "3":
         ret = saveNews(db, userID, newsID)
-    closedb(db)
-    if ret == "True":
-        result["returnCode"] = 1
-    else :
-        result["returnCode"] = 0
-    return json.dumps(result)
-
-# like_or_dislike: "like" for like, "dislike" for dislike
-# operation: "1" for add, "-1" for subtract
-# returnCode: 0 for success, 1 for fail
-@app.route('/evaluate', methods=['POST'])
-def makeEvaluation():
-    newsID = request.form.get('newsid')
-    like_or_dislike = request.form.get('like_or_dislike')
-    operation = request.form.get('operation')
-    db = connectdb()
-    ret = updateNewsLikeNum(db, newsID, like_or_dislike, operation)
-    closedb(db)
+        ret2 = "True"
     result = {}
-    if ret == "True":
-        result["returnCode"] = 1
-    else :
+    if (ret == "False") | (ret2 == "False"):
         result["returnCode"] = 0
+        db.rollback()
+    else:
+        result["returnCode"] = 1
+    closedb(db)
     return json.dumps(result)
 
 
 # postType: 0-comment 1-like 2-dislike 3-save
 # returnCode = 1 if success
-# else return False
-# if like or dislike already exist, return False
+# else returnCode = 0
 @app.route('/deleteComment', methods=['GET', 'POST'])
 def deleteComment():
     type = request.form.get('posttype')
     userID = request.form.get('userid')
     newsID = request.form.get('newsid')
     db = connectdb()
-    ret = 0
-    result = {}
+    ret = "False"
+    ret2 = "False"
     if type == "0":
         comment = request.form.get('comment')
         ret = delete_comment(db, userID, newsID, comment)
+        ret2 = "True"
     if type == "1":
         ret = delete_comment(db, userID, newsID, "like")
+        ret2 = updateLike(db, userID, newsID, 1, 0)
     if type == "2":
         ret = delete_comment(db, userID, newsID, "dislike")
+        ret2 = updateLike(db, userID, newsID, 0, 0)
     if type == "3":
         ret = deleteSave(db, userID, newsID)
-    closedb(db)
-    if ret == "True":
-        result["returnCode"] = 1
-    else:
+        ret2 = "True"
+    result = {}
+    if (ret == "False") | (ret2 == "False"):
         result["returnCode"] = 0
+        db.rollback()
+    else:
+        result["returnCode"] = 1
+    closedb(db)
+
     return json.dumps(result)
 ############################################################################
 
