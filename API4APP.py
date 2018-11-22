@@ -220,7 +220,7 @@ def checkSubscription(db, userID):
             publisherName.append(publisher[0][0])
         list_publisher = {}
         list_publisher["publisher"] = publisherName
-        return json.dumps(list_publisher)
+        return list_publisher
     except Exception, Argument:
         print Argument
     return "False"
