@@ -248,7 +248,7 @@ def search_by_keys(db, keyword):
             tmp["title"] = row[2]
             tmp["author"] = row[3]
             tmp["time"] = row[4]
-            tmp["content"] = row[5]
+            tmp["content"] = json.loads(row[5])
             for item in tmp["content"]:
                 if item["type"] == "image":
                     tmp["thumbnail"] = item["content"]
