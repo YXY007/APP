@@ -136,7 +136,7 @@ def saveNews(db, userID, newsID):
 def allNews(db):
     cursor = db.cursor()
     sql = "SELECT * FROM news;"
-    news_list = {}
+    news_list = []
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
@@ -154,7 +154,9 @@ def allNews(db):
                     break
             tmp["like_num"] = row[6]
             tmp["dislike_num"] = row[7]
-            news_list[str(newsID)] = tmp
+            tmp["newsID"] = newsID
+            # news_list[str(newsID)] = tmp
+            news_list.append(tmp)
     except Exception, Argument:
         print Argument
     return news_list
@@ -168,7 +170,7 @@ def queryNews(db, publisher):
             sql = sql + " OR "
         sql = sql + "publisher = '" + str(name) + "'"
     sql = sql + " ORDER BY newsID DESC;"
-    news_list = {}
+    news_list = []
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
@@ -186,7 +188,9 @@ def queryNews(db, publisher):
                     break
             tmp["like_num"] = row[6]
             tmp["dislike_num"] = row[7]
-            news_list[str(newsID)] = tmp
+            tmp["newsID"] = newsID
+            # news_list[str(newsID)] = tmp
+            news_list.append(tmp)
     except Exception, Argument:
         print Argument
     return news_list
@@ -237,7 +241,7 @@ def checkSubscription(db, userID):
 def search_by_keys(db, keyword):
     cursor = db.cursor()
     sql = "SELECT * FROM news WHERE title LIKE \'%"+keyword+"%\'  OR content LIKE \'%"+keyword+"%\' ORDER BY newsID DESC;"
-    news_list = {}
+    news_list = []
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
@@ -255,7 +259,9 @@ def search_by_keys(db, keyword):
                     break
             tmp["like_num"] = row[6]
             tmp["dislike_num"] = row[7]
-            news_list[str(newsID)] = tmp
+            tmp["newsID"] = newsID
+            # news_list[str(newsID)] = tmp
+            news_list.append(tmp)
     except Exception, Argument:
         print Argument
     return news_list
