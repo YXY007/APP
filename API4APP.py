@@ -237,6 +237,23 @@ def checkSubscription(db, userID):
         print Argument
     return "False"
 
+def getPublisher(db):
+    cursor = db.cursor()
+    sql = "SELECT * FROM publisher;"
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        publisher_list = []
+        for row in results:
+            tmp = {}
+            tmp["publisherID"] = row[0]
+            tmp["publisherName"] = row[1]
+            publisher_list.append(tmp)
+        return publisher_list
+    except Exception, Argument:
+        print Argument
+    return "False"
+
 
 def search_by_keys(db, keyword):
     cursor = db.cursor()
@@ -416,6 +433,20 @@ def subscribe():
         result["returnCode"] = 1
         if ret != "True":
             result["returnContent"] = ret
+    return json.dumps(result)
+
+
+@app.route('/publisher', methods=['GET'])
+def publisher():
+    db = connectdb()
+    ret = getPublisher(db)
+    closedb(db)
+    result = {}
+    if ret == "False":
+        result["returnCode"] = 0
+    else:
+        result["returnCode"] = 1
+        result["publisher"] = ret
     return json.dumps(result)
 
 
