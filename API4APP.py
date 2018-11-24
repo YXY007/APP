@@ -144,6 +144,10 @@ def allNews(db):
             tmp = {}
             newsID = row[0]
             tmp["publisher"] = row[1]
+            sql = "SELECT publisherID FROM APP.publisher WHERE publisherName = %s;"
+            cursor.execute(sql, tmp["publisher"])
+            publisher = cursor.fetchall()
+            tmp["publisherID"] = publisher[0][0]
             tmp["title"] = row[2]
             tmp["author"] = row[3]
             tmp["time"] = row[4]
@@ -178,6 +182,10 @@ def queryNews(db, publisher):
             tmp = {}
             newsID = row[0]
             tmp["publisher"] = row[1]
+            sql = "SELECT publisherID FROM APP.publisher WHERE publisherName = %s;"
+            cursor.execute(sql, tmp["publisher"])
+            publisher = cursor.fetchall()
+            tmp["publisherID"] = publisher[0][0]
             tmp["title"] = row[2]
             tmp["author"] = row[3]
             tmp["time"] = row[4]
@@ -266,6 +274,10 @@ def search_by_keys(db, keyword):
             tmp = {}
             newsID = row[0]
             tmp["publisher"] = row[1]
+            sql = "SELECT publisherID FROM APP.publisher WHERE publisherName = %s;"
+            cursor.execute(sql, tmp["publisher"])
+            publisher = cursor.fetchall()
+            tmp["publisherID"] = publisher[0][0]
             tmp["title"] = row[2]
             tmp["author"] = row[3]
             tmp["time"] = row[4]
