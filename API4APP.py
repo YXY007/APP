@@ -436,6 +436,7 @@ def subscribe():
     return json.dumps(result)
 
 
+# get all publishers 
 @app.route('/publisher', methods=['GET'])
 def publisher():
     db = connectdb()
