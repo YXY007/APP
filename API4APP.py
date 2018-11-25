@@ -132,6 +132,27 @@ def saveNews(db, userID, newsID):
     return "False"
 
 
+def getComment(db, newsID):
+    cursor = db.cursor()
+    sql = "SELECT * FROM comment WHERE newsID = %s;"
+    results = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, newsID)
+        db.commit()
+        comments = cursor.fetchall()
+        for item in comments:
+            tmp = {}
+            tmp["userID"] = item[0]
+            tmp["newsID"] = item[1]
+            tmp["comment"] = item[2]
+            results.append(tmp)
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return results
+
+
 # query
 def allNews(db):
     cursor = db.cursor()
@@ -524,6 +545,29 @@ def makeComment():
         db.rollback()
     else:
         result["returnCode"] = 1
+    closedb(db)
+    return json.dumps(result)
+
+
+# postType: 0-get comment 
+# returnCode = 1 if success
+# else returnCode = 0
+# if like or dislike already exist, returnCode = 0
+@app.route('/getinfo', methods=['POST','GET'])
+def getinfo():
+    type = request.form.get('posttype')
+    # userID = request.form.get('userid')
+    ret = "False"
+    result = {}
+    db = connectdb()
+    if type == "0":
+        newsID = request.form.get('newsid')
+        ret = getComment(db, newsID)
+    if ret == "False":
+        result["returnCode"] = 0
+    else :
+        result["returnCode"] = 1
+        result["returnContent"] = ret
     closedb(db)
     return json.dumps(result)
 
