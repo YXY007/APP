@@ -152,6 +152,47 @@ def getComment(db, newsID):
         db.rollback()
     return results
 
+def getSavedNews(db, newsID, userID):
+    cursor = db.cursor()
+    sql = "SELECT * FROM save WHERE newsID = %s AND userID = %s;"
+    results = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, (newsID, userID))
+        db.commit()
+        results = cursor.fetchall()
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return results
+
+def getLikedNews(db, newsID, userID):
+    cursor = db.cursor()
+    sql = "SELECT * FROM comment WHERE userID = %s AND newsID = %s AND comment = 'like';"
+    results = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, (userID, newsID))
+        db.commit()
+        results = cursor.fetchall()
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return results
+
+def getDislikedNews(db, newsID, userID):
+    cursor = db.cursor()
+    sql = "SELECT * FROM comment WHERE userID = %s AND newsID = %s AND comment = 'dislike';"
+    results = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, (userID, newsID))
+        db.commit()
+        results = cursor.fetchall()
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return results
 
 # query
 def allNews(db):
@@ -314,6 +355,59 @@ def search_by_keys(db, keyword):
             news_list.append(tmp)
     except Exception, Argument:
         print Argument
+    return news_list
+
+def get_saved_news_detail(db, userID):
+    cursor = db.cursor()
+    sql = "SELECT newsID FROM save WHERE userID = %s;"
+    results = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, (userID))
+        db.commit()
+        results = cursor.fetchall()
+        for item in results:
+            results = getNewsById(db, item[0])
+
+    except Exception, Argument:
+        print Argument
+        db.rollback()
+    return results
+
+def getNewsById(db, newsID):
+    cursor = db.cursor()
+    sql = "SELECT * FROM APP.news WHERE newsID = %s;"
+    results = []
+    news_list = []
+    try:
+        cursor.execute("USE APP;")
+        cursor.execute(sql, (newsID))
+        db.commit()
+        results = cursor.fetchall()
+        for row in results:
+            tmp = {}
+            newsID = row[0]
+            tmp["publisher"] = row[1]
+            sql = "SELECT publisherID FROM APP.publisher WHERE publisherName = %s;"
+            cursor.execute(sql, tmp["publisher"])
+            publisher = cursor.fetchall()
+            tmp["publisherID"] = publisher[0][0]
+            tmp["title"] = row[2]
+            tmp["author"] = row[3]
+            tmp["time"] = row[4]
+            tmp["content"] = json.loads(row[5])
+            for item in tmp["content"]:
+                if item["type"] == "image":
+                    tmp["thumbnail"] = item["content"]
+                    break
+            tmp["like_num"] = row[6]
+            tmp["dislike_num"] = row[7]
+            tmp["newsID"] = newsID
+            news_list.append(tmp)
+
+    except Exception, Argument:
+        print Argument
+        db.rollback()
     return news_list
 
 
@@ -549,20 +643,35 @@ def makeComment():
     return json.dumps(result)
 
 
-# postType: 0-get comment 
+# postType: 0-get comment 1-get saved news list, liked news list, disliked news list
+# 2-get saved news detail
 # returnCode = 1 if success
 # else returnCode = 0
 # if like or dislike already exist, returnCode = 0
 @app.route('/getinfo', methods=['POST','GET'])
 def getinfo():
     type = request.form.get('posttype')
-    # userID = request.form.get('userid')
     ret = "False"
     result = {}
     db = connectdb()
     if type == "0":
         newsID = request.form.get('newsid')
         ret = getComment(db, newsID)
+    if type == "1":
+        newsID = request.form.get('newsid')
+        userID = request.form.get('userid')
+        savedNews = getSavedNews(db, newsID, userID)
+        likedNews = getLikedNews(db, newsID, userID)
+        dislikedNews = getDislikedNews(db, newsID, userID)
+        ret = {}
+        ret["savedNews"] = savedNews
+        ret["likedNews"] = likedNews
+        ret["dislikedNews"] = dislikedNews
+    if type == "2":
+        userID = request.form.get('userid')
+        savedNewsDetail = get_saved_news_detail(db, userID)
+        ret = {}
+        ret["savedNewsDetail"] = savedNewsDetail
     if ret == "False":
         result["returnCode"] = 0
     else :
